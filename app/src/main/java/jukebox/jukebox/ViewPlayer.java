@@ -14,6 +14,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.PlaybackState;
+import com.spotify.sdk.android.player.Player;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -34,6 +38,9 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     Song curSong = null;
     PlayerState nextState = null;
     Timer updateTimer = null;
+    Timer spotifyTimer = null;
+
+    boolean isMaster = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -132,11 +139,18 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             return;
         else if (bPlayStop.getText() == "Play")
         {
+            isMaster = true;
             Calendar startTime = Calendar.getInstance();
-            startTime.add(Calendar.SECOND, 10);
-            Database.SetNextSong(Global.group.id, Global.group.GetSongByIndex(0).id, startTime.getTimeInMillis());
+            startTime.add(Calendar.SECOND, 5);
+            Database.SetNextSong(Global.group.id, 0, startTime.getTimeInMillis());
         }
-
+        else if (bPlayStop.getText() == "Stop")
+        {
+            Global.player.pause(mOperationCallback);
+            Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
+            curSong = null;
+            nextState.songIndex = -1;
+        }
     }
 
     private void updatePlayerState()
@@ -159,16 +173,29 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                     {
                         long diff = nextState.startTime.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
                         diff /= 1000;
+                        diff++;
                         bPlayStop.setText("Starting in " + String.valueOf(diff));
                     }
                 }
                 else
                 {
                     lCurrentSong.setText("Currently playing: " + curSong.artist + " - " + curSong.title);
-                    String s = String.valueOf(curSong.duration % 60);
-                    if (s.length() == 1)
-                        s = "0" + s;
-                    lSongTime.setText("0:00" + " / " + String.valueOf(curSong.duration / 60) + ":" + s);
+
+                    PlaybackState st = Global.player.getPlaybackState();
+                    int curTime = 0;
+                    if (st.isPlaying)
+                        curTime = (int)(st.positionMs / 1000);
+                    String s1 = String.valueOf(curTime % 60);
+                    if (s1.length() == 1)
+                        s1 = "0" + s1;
+                    s1 = String.valueOf(curTime / 60) + ":" + s1;
+
+                    String s2 = String.valueOf(curSong.duration % 60);
+                    if (s2.length() == 1)
+                        s2 = "0" + s2;
+                    s2 = String.valueOf(curSong.duration / 60) + ":" + s2;
+
+                    lSongTime.setText(s1 + " / " + s2);
                     bPlayStop.setText("Stop");
 
                     if (nextState != null && nextState.songIndex == -1)
@@ -182,6 +209,42 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    private void spotifyDelayedPlay(final Calendar startTime)
+    {
+        Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, 0);
+        Global.player.pause(mOperationCallback);
+
+        if (spotifyTimer != null)
+            return;
+
+        long diff = nextState.startTime.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
+        if (diff < 0)
+            Global.player.resume(mOperationCallback);
+        else
+        {
+            Timer t = new Timer("Music starter");
+            t.schedule(new TimerTask()
+            {
+                @Override
+                public void run()
+                {
+                    curSong = Global.group.GetSongByIndex(nextState.songIndex);
+                    spotifyTimer = null;
+                    spotifyImmediatePlay(startTime);
+                }
+            }, diff);
+        }
+    }
+
+    private void spotifyImmediatePlay(final Calendar startTime)
+    {
+        int diff = (int)(Calendar.getInstance().getTimeInMillis() - nextState.startTime.getTimeInMillis());
+        if (diff < 0)
+            diff = 0;
+        Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, diff);
+        curSong = Global.group.GetSongByIndex(nextState.songIndex);
+    }
+
     private void updateOnlineState()
     {
         Database.GetPlayerState(Global.group.id, new Function<PlayerState, Object>()
@@ -190,29 +253,56 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             public Object apply(PlayerState playerState)
             {
                 nextState = playerState;
-
-                if (nextState.songIndex != -1)
-                {
-                    //check if song is still playing. If not - update db
-                    Calendar maxSong = (Calendar)nextState.startTime.clone();
-                    //maxSong.setTime(nextState.startTime);
-                    maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
-                    if (maxSong.getTimeInMillis() < Calendar.getInstance().getTimeInMillis())
-                    {
-                        Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
-                        nextState.songIndex = -1;
-                    }
-                    else
-                    {
-                        //start playing
-                    }
-                }
-
-                updatePlayerState();
-
+                NextStateCallback();
                 return null;
             }
         });
+    }
+
+    private void NextStateCallback()
+    {
+        if (nextState.songIndex != -1)
+        {
+            //check if song is still playing. If not - update db
+            Calendar maxSong = (Calendar)nextState.startTime.clone();
+            //maxSong.setTime(nextState.startTime);
+            maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
+            if (maxSong.getTimeInMillis() < Calendar.getInstance().getTimeInMillis())
+            {
+                if (isMaster)
+                {
+                    Calendar startTime = Calendar.getInstance();
+                    startTime.add(Calendar.SECOND, 2);
+                    Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
+                }
+                nextState.songIndex = -1;
+                //Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
+                if (curSong != null)
+                {
+                    curSong = null;
+                    Global.player.pause(mOperationCallback);
+                }
+            }
+            else if (Calendar.getInstance().getTimeInMillis() < nextState.startTime.getTimeInMillis())
+            {
+                //start buffering
+                if (spotifyTimer == null)
+                    spotifyDelayedPlay(nextState.startTime);
+            }
+            else
+            {
+                if (curSong == null && spotifyTimer == null)
+                    spotifyImmediatePlay(nextState.startTime);
+            }
+        }
+        else if (curSong != null)
+        {
+            isMaster = false;
+            curSong = null;
+            Global.player.pause(mOperationCallback);
+        }
+
+        updatePlayerState();
     }
 
     @Override
@@ -220,4 +310,16 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     {
 
     }
+
+    private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
+        @Override
+        public void onSuccess() {
+            Log.d("a", "Operation callback successful");
+        }
+
+        @Override
+        public void onError(Error error) {
+            Log.d("a", "Operation callback error");
+        }
+    };
 }

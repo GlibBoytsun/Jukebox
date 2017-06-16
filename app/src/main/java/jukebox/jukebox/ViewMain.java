@@ -183,7 +183,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent)
     {
-        Log.d("a", "Playback event");
+         Log.d("a", "Playback event");
     }
 
     @Override
