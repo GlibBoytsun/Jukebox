@@ -20,12 +20,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".ViewGroups">
+            <action android:name="android.intent.action.GROUPS"/>
+        </activity>
         <activity android:name=".ViewPlayer">
-            <intent-filter>
-                <action android:name="android.intent.action.PLAYER"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+            <action android:name="android.intent.action.PLAYER"/>
         </activity>
     </application>
 

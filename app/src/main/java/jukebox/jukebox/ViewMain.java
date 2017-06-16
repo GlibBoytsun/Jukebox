@@ -1,6 +1,5 @@
 package jukebox.jukebox;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -17,13 +16,17 @@ import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
-import com.spotify.sdk.android.player.PlaybackState;
 import com.spotify.sdk.android.player.Player;
 import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
+import java.util.ArrayList;
+import java.util.function.Function;
+
 //PHP server tutorial https://www.b4x.com/android/forum/threads/connect-android-to-mysql-database-tutorial.8339/
+//https://www.tutorialspoint.com/android/android_php_mysql.htm
+//https://github.com/spotify/android-sdk
 
 public class ViewMain extends AppCompatActivity implements Player.NotificationCallback, ConnectionStateCallback
 {
@@ -32,8 +35,13 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     private static final String REDIRECT_URI = "testschema://callback";
 
     private SpotifyPlayer mPlayer;
-    private PlaybackState mCurrentPlaybackState;
-    private BroadcastReceiver mNetworkStateReceiver;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
 
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
@@ -46,15 +54,6 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
             Log.d("a", "Operation callback error");
         }
     };
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        //openLoginWindow();
-    }
 
     public void openLoginWindow(View v) {
         final AuthenticationRequest request = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI)
@@ -111,7 +110,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
                     Log.d("D", "Player initialized");
 
                     Global.player = player;
-                    Intent intent = new Intent(ViewMain.this, ViewPlayer.class);
+                    Intent intent = new Intent(ViewMain.this, ViewGroups.class);
                     startActivity(intent);
                 }
 

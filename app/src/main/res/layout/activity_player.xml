@@ -6,15 +6,39 @@
               android:weightSum="1">
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/PlayerInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Player"/>
+        android:text="Retrieving playlist..."/>
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/PlayerRetry"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:text="Retry"
+        android:onClick="bRetry_OnClick"/>
+
+    <ListView
+        android:id="@+id/PlayerPlaylist"
+        android:layout_width="match_parent"
+        android:layout_height="205dp"/>
+
+    <TextView
+        android:id="@+id/PlayerCurrentSong"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button"
-        android:layout_weight="0.45"/>
+        android:text="Currently playing: A - B"/>
+
+    <TextView
+        android:id="@+id/PlayerTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="0:00 / 1:00"/>
+
+    <Button
+        android:id="@+id/PlayerPlayStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Play"/>
+
 </LinearLayout>
