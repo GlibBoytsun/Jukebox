@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,8 +33,8 @@ import java.util.function.Function;
 public class ViewMain extends AppCompatActivity implements Player.NotificationCallback, ConnectionStateCallback
 {
     private static final int REQUEST_CODE = 1337;
-    private static final String CLIENT_ID = "089d841ccc194c10a77afad9e1c11d54";
-    private static final String REDIRECT_URI = "testschema://callback";
+    private static final String CLIENT_ID = "e3141966e1bf4496a62607309847bf0b";
+    private static final String REDIRECT_URI = "https://www.getpostman.com/oauth2/callback";
 
     private SpotifyPlayer mPlayer;
 
@@ -103,15 +105,14 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
                 public void onInitialized(SpotifyPlayer player) {
                     //logStatus("-- Player initialized --");
                     mPlayer.setConnectivityStatus(mOperationCallback, getNetworkConnectivity(ViewMain.this));
-                    mPlayer.addNotificationCallback(ViewMain.this);
-                    mPlayer.addConnectionStateCallback(ViewMain.this);
+                    //mPlayer.addNotificationCallback(ViewMain.this);
+                    //mPlayer.addConnectionStateCallback(ViewMain.this);
                     // Trigger UI refresh
                     //updateView();
                     Log.d("D", "Player initialized");
 
                     Global.player = player;
-                    Intent intent = new Intent(ViewMain.this, ViewGroups.class);
-                    startActivity(intent);
+                    openGroupView();
                 }
 
                 @Override
@@ -122,6 +123,20 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         } else {
             mPlayer.login(authResponse.getAccessToken());
         }
+    }
+
+    private void openGroupView()
+    {
+
+        new Handler(Looper.getMainLooper()).post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                Intent intent = new Intent(ViewMain.this, ViewGroups.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private Connectivity getNetworkConnectivity(Context context) {

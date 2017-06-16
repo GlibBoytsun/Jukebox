@@ -1,7 +1,5 @@
 package jukebox.jukebox;
 
-import android.os.StrictMode;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,8 +10,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.function.Function;
 
 public class Database
@@ -22,9 +20,7 @@ public class Database
 
 
 
-    private static URLConnection connection = null;
-
-    private static void connectionOpen()
+    private static URLConnection connectionOpen()
     {
         //if (connection != null)
         //    return;
@@ -32,12 +28,14 @@ public class Database
         try
         {
             URL url = new URL("http://lowcost-env.8c9rdb3rdt.us-east-1.elasticbeanstalk.com/");
-            connection = url.openConnection();
+            URLConnection connection = url.openConnection();
             connection.setDoInput(true);
             connection.setDoOutput(true);
+            return connection;
         }
         catch (Exception e)
         {
+            return null;
         }
     }
 
@@ -50,7 +48,7 @@ public class Database
             @Override
             public void run()
             {
-                connectionOpen();
+                URLConnection connection = connectionOpen();
 
                 ArrayList<Group> groups = new ArrayList<>();
 
@@ -93,7 +91,7 @@ public class Database
             @Override
             public void run()
             {
-                connectionOpen();
+                URLConnection connection = connectionOpen();
 
                 ArrayList<Song> result = new ArrayList<>();
 
@@ -133,6 +131,77 @@ public class Database
                 catch (Exception e)
                 {
                     callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void GetPlayerState(final int groupID, final Function<PlayerState, Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                URLConnection connection = connectionOpen();
+
+                PlayerState result = null;
+
+                try
+                {
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "SELECT jukebox.playlists.nextSongIndex as ind, UNIX_TIMESTAMP(jukebox.playlists.nextSongStartTime) as time FROM jukebox.playlists WHERE groupid = " + String.valueOf(groupID) + ";",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+                    JSONArray arr = new JSONArray(s);
+                    JSONObject jo = arr.getJSONObject(0);
+                    result = new PlayerState();
+                    result.songIndex = jo.getInt("ind");
+                    if (result.songIndex != -1)
+                    {
+                        result.startTime = Calendar.getInstance();
+                        result.startTime.setTime(new Date(1000l * jo.getLong("time")));
+                    }
+
+                    callback.apply(result);
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void SetNextSong(final int groupID, final int nextIndex, final long nextStartTime)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                URLConnection connection = connectionOpen();
+
+                try
+                {
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "UPDATE jukebox.playlists SET nextSongIndex = " + String.valueOf(nextIndex) + ", nextSongStartTime = FROM_UNIXTIME(" + String.valueOf(nextStartTime / 1000) + ") WHERE groupid = " + String.valueOf(groupID) + ";",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                }
+                catch (Exception e)
+                {
+                    int asdf = 0;
                 }
             }
         }).start();

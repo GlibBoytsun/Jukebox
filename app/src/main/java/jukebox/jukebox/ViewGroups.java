@@ -92,7 +92,6 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
     {
         Global.group = groups.get(index);
         Intent intent = new Intent(this, ViewPlayer.class);
-        intent.putExtra("groupID", Global.group.id);
         startActivity(intent);
     }
 }

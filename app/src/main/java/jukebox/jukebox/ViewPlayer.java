@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,7 +15,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Function;
 
 public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemClickListener
@@ -28,6 +32,8 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     Button bPlayStop;
 
     Song curSong = null;
+    PlayerState nextState = null;
+    Timer updateTimer = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -63,7 +69,6 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             public Object apply(ArrayList<Song> songs)
             {
                 Global.group.playlist = songs;
-                curSong = songs.get(0);
 
                 new Handler(Looper.getMainLooper()).post(new Runnable()
                 {
@@ -79,6 +84,8 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                             return;
                         }
 
+                        //curSong = songs.get(0);
+
                         lInfo.setVisibility(View.INVISIBLE);
                         bRetry.setVisibility(View.INVISIBLE);
                         lbPlaylist.setVisibility(View.VISIBLE);
@@ -93,6 +100,17 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                         lbPlaylist.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_selectable_list_item, arr));
 
                         updatePlayerState();
+
+                        updateTimer = new Timer("Player update timer");
+                        updateTimer.schedule(new TimerTask()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                updateOnlineState();
+                                updatePlayerState();
+                            }
+                        }, 0, 1000);
                     }
                 });
 
@@ -108,23 +126,93 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         getPlaylist();
     }
 
+    public void bPlayStop_OnClick(View v)
+    {
+        if (bPlayStop.getText() == "...")
+            return;
+        else if (bPlayStop.getText() == "Play")
+        {
+            Calendar startTime = Calendar.getInstance();
+            startTime.add(Calendar.SECOND, 10);
+            Database.SetNextSong(Global.group.id, Global.group.GetSongByIndex(0).id, startTime.getTimeInMillis());
+        }
+
+    }
+
     private void updatePlayerState()
     {
-        if (curSong == null)
+        new Handler(Looper.getMainLooper()).post(new Runnable()
         {
-            lCurrentSong.setText("");
-            lSongTime.setText("");
-            bPlayStop.setText("Play");
-        }
-        else
+            @Override
+            public void run()
+            {
+                if (curSong == null)
+                {
+                    bPlayStop.setVisibility(View.VISIBLE);
+                    lCurrentSong.setText("");
+                    lSongTime.setText("");
+                    if (nextState == null)
+                        bPlayStop.setText("...");
+                    else if (nextState.songIndex == -1)
+                        bPlayStop.setText("Play");
+                    else
+                    {
+                        long diff = nextState.startTime.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
+                        diff /= 1000;
+                        bPlayStop.setText("Starting in " + String.valueOf(diff));
+                    }
+                }
+                else
+                {
+                    lCurrentSong.setText("Currently playing: " + curSong.artist + " - " + curSong.title);
+                    String s = String.valueOf(curSong.duration % 60);
+                    if (s.length() == 1)
+                        s = "0" + s;
+                    lSongTime.setText("0:00" + " / " + String.valueOf(curSong.duration / 60) + ":" + s);
+                    bPlayStop.setText("Stop");
+
+                    if (nextState != null && nextState.songIndex == -1)
+                    {
+                        //stop
+                        curSong = null;
+                        updatePlayerState();
+                    }
+                }
+            }
+        });
+    }
+
+    private void updateOnlineState()
+    {
+        Database.GetPlayerState(Global.group.id, new Function<PlayerState, Object>()
         {
-            lCurrentSong.setText("Currently playing: " + curSong.artist + " - " + curSong.title);
-            String s = String.valueOf(curSong.duration % 60);
-            if (s.length() == 1)
-                s = "0" + s;
-            lSongTime.setText("0:00" + " / " + String.valueOf(curSong.duration / 60) + ":" + s);
-            bPlayStop.setText("Play");
-        }
+            @Override
+            public Object apply(PlayerState playerState)
+            {
+                nextState = playerState;
+
+                if (nextState.songIndex != -1)
+                {
+                    //check if song is still playing. If not - update db
+                    Calendar maxSong = (Calendar)nextState.startTime.clone();
+                    //maxSong.setTime(nextState.startTime);
+                    maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
+                    if (maxSong.getTimeInMillis() < Calendar.getInstance().getTimeInMillis())
+                    {
+                        Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
+                        nextState.songIndex = -1;
+                    }
+                    else
+                    {
+                        //start playing
+                    }
+                }
+
+                updatePlayerState();
+
+                return null;
+            }
+        });
     }
 
     @Override
