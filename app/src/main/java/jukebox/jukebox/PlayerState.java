@@ -6,4 +6,5 @@ public class PlayerState
 {
     public int songIndex;
     public Calendar startTime;
+    public Calendar curTime;
 }

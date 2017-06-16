@@ -140,13 +140,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         else if (bPlayStop.getText() == "Play")
         {
             isMaster = true;
-            Calendar startTime = Calendar.getInstance();
+            Calendar startTime = (Calendar)nextState.curTime.clone();
             startTime.add(Calendar.SECOND, 5);
             Database.SetNextSong(Global.group.id, 0, startTime.getTimeInMillis());
         }
         else if (bPlayStop.getText() == "Stop")
         {
             Global.player.pause(mOperationCallback);
+            Log.d("D", "p1");
             Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
             curSong = null;
             nextState.songIndex = -1;
@@ -171,7 +172,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                         bPlayStop.setText("Play");
                     else
                     {
-                        long diff = nextState.startTime.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
+                        long diff = nextState.startTime.getTimeInMillis() - nextState.curTime.getTimeInMillis();
                         diff /= 1000;
                         diff++;
                         bPlayStop.setText("Starting in " + String.valueOf(diff));
@@ -211,13 +212,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
 
     private void spotifyDelayedPlay(final Calendar startTime)
     {
+        Log.d("D", "delayed");
         Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, 0);
         Global.player.pause(mOperationCallback);
 
         if (spotifyTimer != null)
             return;
 
-        long diff = nextState.startTime.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
+        long diff = nextState.startTime.getTimeInMillis() - nextState.curTime.getTimeInMillis();
         if (diff < 0)
             Global.player.resume(mOperationCallback);
         else
@@ -230,15 +232,16 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                 {
                     curSong = Global.group.GetSongByIndex(nextState.songIndex);
                     spotifyTimer = null;
-                    spotifyImmediatePlay(startTime);
+                    Global.player.resume(mOperationCallback);
                 }
             }, diff);
         }
     }
 
-    private void spotifyImmediatePlay(final Calendar startTime)
+    private void spotifyImmediatePlay()
     {
-        int diff = (int)(Calendar.getInstance().getTimeInMillis() - nextState.startTime.getTimeInMillis());
+        Log.d("D", "immediate");
+        int diff = (int)(nextState.curTime.getTimeInMillis() - nextState.startTime.getTimeInMillis());
         if (diff < 0)
             diff = 0;
         Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, diff);
@@ -267,39 +270,47 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             Calendar maxSong = (Calendar)nextState.startTime.clone();
             //maxSong.setTime(nextState.startTime);
             maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
-            if (maxSong.getTimeInMillis() < Calendar.getInstance().getTimeInMillis())
+            if (maxSong.getTimeInMillis() < nextState.curTime.getTimeInMillis())
             {
+                Log.d("D", "1");
                 if (isMaster)
                 {
-                    Calendar startTime = Calendar.getInstance();
+                    Log.d("D", "11");
+                    Calendar startTime = (Calendar)nextState.curTime.clone();
                     startTime.add(Calendar.SECOND, 2);
                     Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
                 }
+                Log.d("D", "12");
                 nextState.songIndex = -1;
-                //Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
                 if (curSong != null)
                 {
+                    Log.d("D", "13");
                     curSong = null;
                     Global.player.pause(mOperationCallback);
+                    Log.d("D", "p2");
                 }
             }
-            else if (Calendar.getInstance().getTimeInMillis() < nextState.startTime.getTimeInMillis())
+            else if (nextState.curTime.getTimeInMillis() < nextState.startTime.getTimeInMillis())
             {
+                Log.d("D", "2");
                 //start buffering
                 if (spotifyTimer == null)
                     spotifyDelayedPlay(nextState.startTime);
             }
             else
             {
+                Log.d("D", "3");
                 if (curSong == null && spotifyTimer == null)
-                    spotifyImmediatePlay(nextState.startTime);
+                    spotifyImmediatePlay();
             }
         }
         else if (curSong != null)
         {
+            Log.d("D", "4");
             isMaster = false;
             curSong = null;
             Global.player.pause(mOperationCallback);
+            Log.d("D", "p3");
         }
 
         updatePlayerState();
@@ -314,12 +325,12 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.d("a", "Operation callback successful");
+
         }
 
         @Override
         public void onError(Error error) {
-            Log.d("a", "Operation callback error");
+
         }
     };
 }

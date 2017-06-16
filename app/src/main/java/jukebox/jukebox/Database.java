@@ -150,7 +150,7 @@ public class Database
                 try
                 {
                     String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
-                            "SELECT jukebox.playlists.nextSongIndex as ind, UNIX_TIMESTAMP(jukebox.playlists.nextSongStartTime) as time FROM jukebox.playlists WHERE groupid = " + String.valueOf(groupID) + ";",
+                            "SELECT jukebox.playlists.nextSongIndex as ind, UNIX_TIMESTAMP(jukebox.playlists.nextSongStartTime) as time, UNIX_TIMESTAMP(NOW()) as curTime FROM jukebox.playlists WHERE groupid = " + String.valueOf(groupID) + ";",
                             "UTF-8");
                     OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
                     wr.write(data);
@@ -169,6 +169,8 @@ public class Database
                         result.startTime = Calendar.getInstance();
                         result.startTime.setTime(new Date(1000l * jo.getLong("time")));
                     }
+                    result.curTime = Calendar.getInstance();
+                    result.curTime.setTime(new Date(1000l * jo.getLong("curTime")));
 
                     callback.apply(result);
                 }
