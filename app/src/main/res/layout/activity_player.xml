@@ -42,4 +42,11 @@
         android:text="Play"
         android:onClick="bPlayStop_OnClick"/>
 
+    <Button
+        android:id="@+id/PlayerNextTrack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Next track"
+        android:onClick="bNextTrack_OnClick"/>
+
 </LinearLayout>

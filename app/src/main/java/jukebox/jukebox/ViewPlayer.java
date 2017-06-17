@@ -34,6 +34,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     TextView lCurrentSong;
     TextView lSongTime;
     Button bPlayStop;
+    Button bNextTrack;
 
     Song curSong = null;
     PlayerState nextState = null;
@@ -47,6 +48,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+        setTitle("Player");
 
         context = this;
         lInfo = (TextView)findViewById(R.id.PlayerInfo);
@@ -55,6 +57,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         lCurrentSong = (TextView)findViewById(R.id.PlayerCurrentSong);
         lSongTime = (TextView)findViewById(R.id.PlayerTime);
         bPlayStop = (Button)findViewById(R.id.PlayerPlayStop);
+        bNextTrack = (Button)findViewById(R.id.PlayerNextTrack);
 
         lbPlaylist.setOnItemClickListener(this);
 
@@ -64,6 +67,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         lCurrentSong.setVisibility(View.INVISIBLE);
         lSongTime.setVisibility(View.INVISIBLE);
         bPlayStop.setVisibility(View.INVISIBLE);
+        bNextTrack.setVisibility(View.INVISIBLE);
 
         getPlaylist();
     }
@@ -91,14 +95,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                             return;
                         }
 
-                        //curSong = songs.get(0);
-
                         lInfo.setVisibility(View.INVISIBLE);
                         bRetry.setVisibility(View.INVISIBLE);
                         lbPlaylist.setVisibility(View.VISIBLE);
                         lCurrentSong.setVisibility(View.VISIBLE);
                         lSongTime.setVisibility(View.VISIBLE);
                         bPlayStop.setVisibility(View.VISIBLE);
+                        bNextTrack.setVisibility(View.VISIBLE);
+                        bNextTrack.setActivated(false);
 
                         List<String> arr = new ArrayList();
                         for (int i = 0; i < songs.size(); i++)
@@ -135,6 +139,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
 
     public void bPlayStop_OnClick(View v)
     {
+        bNextTrack.setActivated(false);
         if (bPlayStop.getText() == "...")
             return;
         else if (bPlayStop.getText() == "Play")
@@ -151,7 +156,16 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
             curSong = null;
             nextState.songIndex = -1;
+            bNextTrack.setActivated(true);
         }
+    }
+
+    public void bNextTrack_OnClick(View v)
+    {
+        Calendar startTime = (Calendar)nextState.curTime.clone();
+        startTime.add(Calendar.SECOND, 3);
+        Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
+        bNextTrack.setActivated(false);
     }
 
     private void updatePlayerState()
@@ -185,7 +199,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                     PlaybackState st = Global.player.getPlaybackState();
                     int curTime = 0;
                     if (st.isPlaying)
-                        curTime = (int)(st.positionMs / 1000);
+                        curTime = (int) (st.positionMs / 1000);
                     String s1 = String.valueOf(curTime % 60);
                     if (s1.length() == 1)
                         s1 = "0" + s1;

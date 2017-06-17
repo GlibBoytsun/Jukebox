@@ -23,13 +23,8 @@ import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
-import java.util.ArrayList;
-import java.util.function.Function;
-
-//PHP server tutorial https://www.b4x.com/android/forum/threads/connect-android-to-mysql-database-tutorial.8339/
-//https://www.tutorialspoint.com/android/android_php_mysql.htm
-//https://github.com/spotify/android-sdk
-
+//REFERENCE
+//Almost all code in this class is taken from the Spotify Android SDK (https://github.com/spotify/android-sdk)
 public class ViewMain extends AppCompatActivity implements Player.NotificationCallback, ConnectionStateCallback
 {
     private static final int REQUEST_CODE = 1337;
@@ -69,21 +64,17 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
         if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             switch (response.getType()) {
-                // Response was successful and contains auth token
                 case TOKEN:
                     onAuthenticationComplete(response);
                     break;
 
-                // Auth flow returned an error
                 case ERROR:
                     Log.d("a", "Auth error");
                     break;
 
-                // Most likely auth flow was cancelled
                 default:
                     Log.d("a", "Auth default");
             }
@@ -91,24 +82,12 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     }
 
     private void onAuthenticationComplete(AuthenticationResponse authResponse) {
-        // Once we have obtained an authorization token, we can proceed with creating a Player.
-        //logStatus("Got authentication token");
         if (mPlayer == null) {
             Config playerConfig = new Config(getApplicationContext(), authResponse.getAccessToken(), CLIENT_ID);
-            // Since the Player is a static singleton owned by the Spotify class, we pass "this" as
-            // the second argument in order to refcount it properly. Note that the method
-            // Spotify.destroyPlayer() also takes an Object argument, which must be the same as the
-            // one passed in here. If you pass different instances to Spotify.getPlayer() and
-            // Spotify.destroyPlayer(), that will definitely result in resource leaks.
             mPlayer = Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                 @Override
                 public void onInitialized(SpotifyPlayer player) {
-                    //logStatus("-- Player initialized --");
                     mPlayer.setConnectivityStatus(mOperationCallback, getNetworkConnectivity(ViewMain.this));
-                    //mPlayer.addNotificationCallback(ViewMain.this);
-                    //mPlayer.addConnectionStateCallback(ViewMain.this);
-                    // Trigger UI refresh
-                    //updateView();
                     Log.d("D", "Player initialized");
 
                     Global.player = player;
@@ -192,3 +171,5 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         Log.d("a", "Playback error");
     }
 }
+
+//Reference for most of the code in this file is provided before declaration of this class

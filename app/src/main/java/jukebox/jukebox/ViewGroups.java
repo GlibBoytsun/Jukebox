@@ -30,6 +30,7 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groups);
+        setTitle("Groups");
 
         context = this;
         lInfo = (TextView)findViewById(R.id.GroupsInfo);
