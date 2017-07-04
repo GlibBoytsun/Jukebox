@@ -208,4 +208,62 @@ public class Database
             }
         }).start();
     }
+
+    public static void AddSong(final int groupID, final Song song, final Function<Object, Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    URLConnection connection = connectionOpen();
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "insert into jukebox.songs(title, artist, duration, URL) values (\"" + song.title + "\", \"" + song.artist + "\", " + song.duration + ", \"" + song.url + "\");",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    connection = connectionOpen();
+                    data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "select id from jukebox.songs where URL like \"" + song.url + "\";",
+                            "UTF-8");
+                    wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    s = "";
+                    while((t = reader.readLine()) != null)
+                        s += t;
+                    int id = new JSONArray(s).getJSONObject(0).getInt("id");
+
+                    connection = connectionOpen();
+                    data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                                    "insert into jukebox.playlistSongs (playlistID, songID, songIndex) values (" + groupID + ", " +
+                                    "" + id + ", " +
+                                    "(select max(songIndex) from (select songIndex, playlistID from jukebox.playlistSongs) as A where playlistID = " + groupID + ") + 1);",
+                            "UTF-8");
+                    wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    s = "";
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    callback.apply(null);
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
 }

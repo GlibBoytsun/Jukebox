@@ -84,6 +84,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     private void onAuthenticationComplete(AuthenticationResponse authResponse) {
         if (mPlayer == null) {
             Config playerConfig = new Config(getApplicationContext(), authResponse.getAccessToken(), CLIENT_ID);
+            Global.playerConfig = playerConfig;
             mPlayer = Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                 @Override
                 public void onInitialized(SpotifyPlayer player) {

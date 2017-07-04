@@ -2,6 +2,7 @@ package jukebox.jukebox;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +26,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
 
+//TODO timed playlist updates
 public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemClickListener
 {
     Context context;
@@ -35,6 +37,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     TextView lSongTime;
     Button bPlayStop;
     Button bNextTrack;
+    Button bAddSongs;
 
     Song curSong = null;
     PlayerState nextState = null;
@@ -49,7 +52,11 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
         setTitle("Player");
+        //init();
+    }
 
+    void init()
+    {
         context = this;
         lInfo = (TextView)findViewById(R.id.PlayerInfo);
         bRetry = (Button)findViewById(R.id.PlayerRetry);
@@ -58,7 +65,16 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         lSongTime = (TextView)findViewById(R.id.PlayerTime);
         bPlayStop = (Button)findViewById(R.id.PlayerPlayStop);
         bNextTrack = (Button)findViewById(R.id.PlayerNextTrack);
+        bAddSongs = (Button)findViewById(R.id.PlayerAddSongs);
 
+        bAddSongs.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                bAddSong_OnClick();
+            }
+        });
         lbPlaylist.setOnItemClickListener(this);
 
         lInfo.setVisibility(View.VISIBLE);
@@ -68,8 +84,23 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         lSongTime.setVisibility(View.INVISIBLE);
         bPlayStop.setVisibility(View.INVISIBLE);
         bNextTrack.setVisibility(View.INVISIBLE);
+        bAddSongs.setVisibility(View.INVISIBLE);
 
         getPlaylist();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        init();
+    }
+
+    void bAddSong_OnClick()
+    {
+        Intent intent = new Intent(this, ViewAddSong.class);
+        startActivity(intent);
+        int asdf = 0;
     }
 
     private void getPlaylist()
@@ -102,6 +133,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                         lSongTime.setVisibility(View.VISIBLE);
                         bPlayStop.setVisibility(View.VISIBLE);
                         bNextTrack.setVisibility(View.VISIBLE);
+                        bAddSongs.setVisibility(View.VISIBLE);
                         bNextTrack.setActivated(false);
 
                         List<String> arr = new ArrayList();
@@ -148,6 +180,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             Calendar startTime = (Calendar)nextState.curTime.clone();
             startTime.add(Calendar.SECOND, 5);
             Database.SetNextSong(Global.group.id, 0, startTime.getTimeInMillis());
+            bAddSongs.setEnabled(false);
         }
         else if (bPlayStop.getText() == "Stop")
         {
@@ -157,6 +190,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             curSong = null;
             nextState.songIndex = -1;
             bNextTrack.setActivated(true);
+            bAddSongs.setEnabled(true);
         }
     }
 

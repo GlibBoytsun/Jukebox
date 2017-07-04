@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <EditText
+            android:id="@+id/AddSongFilter"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".8"
+            android:ems="10"
+            android:hint="Song Name"
+            android:inputType="textPersonName"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"/>
+
+        <Button
+            android:id="@+id/AddSongSearch"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".2"
+            android:text="Search"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/AddSongState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <ListView
+        android:id="@+id/AddSongList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+</LinearLayout>
