@@ -241,10 +241,23 @@ public class Database
                     s = "";
                     while((t = reader.readLine()) != null)
                         s += t;
-                    int id = 0;
+                    int id = new JSONArray(s).getJSONObject(0).getInt("id");
+
+                    connection = connectionOpen();
+                    data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "select max(songIndex) as ind from jukebox.playlistSongs where playlistID = " + groupID + "",
+                            "UTF-8");
+                    wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    s = "";
+                    while((t = reader.readLine()) != null)
+                        s += t;
+                    int ind = 0;
                     try
                     {
-                        id = new JSONArray(s).getJSONObject(0).getInt("id");
+                        ind = new JSONArray(s).getJSONObject(0).getInt("ind");
                     }
                     catch(Exception e)
                     {
@@ -254,8 +267,7 @@ public class Database
                     connection = connectionOpen();
                     data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
                                     "insert into jukebox.playlistSongs (playlistID, songID, songIndex) values (" + groupID + ", " +
-                                    "" + id + ", " +
-                                    "(select max(songIndex) from (select songIndex, playlistID from jukebox.playlistSongs) as A where playlistID = " + groupID + ") + 1);",
+                                    id + ", " + ind + ");",
                             "UTF-8");
                     wr = new OutputStreamWriter(connection.getOutputStream());
                     wr.write(data);
