@@ -312,7 +312,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
 
     private void NextStateCallback()
     {
-        if (nextState.songIndex != -1)
+        if (nextState != null && nextState.songIndex != -1)
         {
             //check if song is still playing. If not - update db
             Calendar maxSong = (Calendar)nextState.startTime.clone();
