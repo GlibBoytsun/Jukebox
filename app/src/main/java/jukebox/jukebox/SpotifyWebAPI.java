@@ -11,7 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.function.Function;
+
 
 public class SpotifyWebAPI
 {

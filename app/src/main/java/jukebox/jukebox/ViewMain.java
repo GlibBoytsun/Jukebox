@@ -1,11 +1,16 @@
 package jukebox.jukebox;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,7 +43,18 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    1);
+        }
     }
+
+
 
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
@@ -89,7 +105,6 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
                 @Override
                 public void onInitialized(SpotifyPlayer player) {
                     mPlayer.setConnectivityStatus(mOperationCallback, getNetworkConnectivity(ViewMain.this));
-                    Log.d("D", "Player initialized");
 
                     Global.player = player;
                     openGroupView();
@@ -102,12 +117,12 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
             });
         } else {
             mPlayer.login(authResponse.getAccessToken());
+            openGroupView();
         }
     }
 
     private void openGroupView()
     {
-
         new Handler(Looper.getMainLooper()).post(new Runnable()
         {
             @Override

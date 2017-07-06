@@ -24,7 +24,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.Function;
+
 
 //TODO timed playlist updates
 public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemClickListener
