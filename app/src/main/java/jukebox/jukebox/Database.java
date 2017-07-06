@@ -241,7 +241,15 @@ public class Database
                     s = "";
                     while((t = reader.readLine()) != null)
                         s += t;
-                    int id = new JSONArray(s).getJSONObject(0).getInt("id");
+                    int id = 0;
+                    try
+                    {
+                        id = new JSONArray(s).getJSONObject(0).getInt("id");
+                    }
+                    catch(Exception e)
+                    {
+
+                    }
 
                     connection = connectionOpen();
                     data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(

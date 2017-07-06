@@ -117,49 +117,54 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                     @Override
                     public void run()
                     {
-                        ArrayList<Song> songs = Global.group.playlist;
-
-                        if (songs == null)
-                        {
-                            bRetry.setVisibility(View.VISIBLE);
-                            lInfo.setText("Couldn't retrieve playlist");
-                            return;
-                        }
-
-                        lInfo.setVisibility(View.INVISIBLE);
-                        bRetry.setVisibility(View.INVISIBLE);
-                        lbPlaylist.setVisibility(View.VISIBLE);
-                        lCurrentSong.setVisibility(View.VISIBLE);
-                        lSongTime.setVisibility(View.VISIBLE);
-                        bPlayStop.setVisibility(View.VISIBLE);
-                        bNextTrack.setVisibility(View.VISIBLE);
-                        bAddSongs.setVisibility(View.VISIBLE);
-                        bNextTrack.setActivated(false);
-
-                        List<String> arr = new ArrayList();
-                        for (int i = 0; i < songs.size(); i++)
-                            arr.add(songs.get(i).artist + " - " + songs.get(i).title);
-
-                        lbPlaylist.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_selectable_list_item, arr));
-
-                        updatePlayerState();
-
-                        updateTimer = new Timer("Player update timer");
-                        updateTimer.schedule(new TimerTask()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                updateOnlineState();
-                                updatePlayerState();
-                            }
-                        }, 0, 1000);
+                        PlaylistRetrieved();
                     }
                 });
 
                 return null;
             }
         });
+    }
+
+    void PlaylistRetrieved()
+    {
+        ArrayList<Song> songs = Global.group.playlist;
+
+        if (songs == null)
+        {
+            bRetry.setVisibility(View.VISIBLE);
+            lInfo.setText("Couldn't retrieve playlist");
+            return;
+        }
+
+        lInfo.setVisibility(View.INVISIBLE);
+        bRetry.setVisibility(View.INVISIBLE);
+        lbPlaylist.setVisibility(View.VISIBLE);
+        lCurrentSong.setVisibility(View.VISIBLE);
+        lSongTime.setVisibility(View.VISIBLE);
+        bPlayStop.setVisibility(View.VISIBLE);
+        bNextTrack.setVisibility(View.VISIBLE);
+        bAddSongs.setVisibility(View.VISIBLE);
+        bNextTrack.setActivated(false);
+
+        List<String> arr = new ArrayList();
+        for (int i = 0; i < songs.size(); i++)
+            arr.add(songs.get(i).artist + " - " + songs.get(i).title);
+
+        lbPlaylist.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_selectable_list_item, arr));
+
+        updatePlayerState();
+
+        updateTimer = new Timer("Player update timer");
+        updateTimer.schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                updateOnlineState();
+                updatePlayerState();
+            }
+        }, 0, 1000);
     }
 
     public void bRetry_OnClick(View v)
