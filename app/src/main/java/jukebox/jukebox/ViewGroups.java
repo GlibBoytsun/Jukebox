@@ -43,7 +43,40 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         bRetry.setVisibility(View.INVISIBLE);
         lbGroups.setVisibility(View.INVISIBLE);
 
+        retrieveUser();
         updateGroups();
+    }
+
+    private void retrieveUser()
+    {
+        SpotifyWebAPI.GetUserName(new Function<String[], Object>()
+        {
+            @Override
+            public Object apply(String[] s)
+            {
+                userNameRetrieved(s[0], s[1]);
+                return null;
+            }
+        });
+    }
+
+    private void userNameRetrieved(String id, String name)
+    {
+        Global.userName = name;
+        Database.GetUserID(id, name, new Function<Integer, Object>()
+        {
+            @Override
+            public Object apply(Integer i)
+            {
+                userIDRetrieved(i);
+                return null;
+            }
+        });
+    }
+
+    private void userIDRetrieved(int id)
+    {
+        Global.userID = id;
     }
 
     private void updateGroups()

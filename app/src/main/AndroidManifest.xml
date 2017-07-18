@@ -23,6 +23,8 @@
         <activity android:name=".ViewGroups" />
         <activity android:name=".ViewPlayer" />
         <activity android:name=".ViewAddSong" />
+        <activity android:name=".ViewDashboard" />
+        <activity android:name=".ViewLeaderboard" />
     </application>
 
 </manifest>

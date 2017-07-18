@@ -38,6 +38,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     Button bPlayStop;
     Button bNextTrack;
     Button bAddSongs;
+    Button bDashboard;
 
     Song curSong = null;
     PlayerState nextState = null;
@@ -66,6 +67,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         bPlayStop = (Button)findViewById(R.id.PlayerPlayStop);
         bNextTrack = (Button)findViewById(R.id.PlayerNextTrack);
         bAddSongs = (Button)findViewById(R.id.PlayerAddSongs);
+        bDashboard = (Button)findViewById(R.id.PlayerDashboard);
 
         bAddSongs.setOnClickListener(new View.OnClickListener()
         {
@@ -73,6 +75,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             public void onClick(View view)
             {
                 bAddSong_OnClick();
+            }
+        });
+        bDashboard.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                bDashboard_OnClick();
             }
         });
         lbPlaylist.setOnItemClickListener(this);
@@ -85,6 +95,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         bPlayStop.setVisibility(View.INVISIBLE);
         bNextTrack.setVisibility(View.INVISIBLE);
         bAddSongs.setVisibility(View.INVISIBLE);
+        bDashboard.setVisibility(View.INVISIBLE);
 
         getPlaylist();
     }
@@ -100,7 +111,12 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     {
         Intent intent = new Intent(this, ViewAddSong.class);
         startActivity(intent);
-        int asdf = 0;
+    }
+
+    void bDashboard_OnClick()
+    {
+        Intent intent = new Intent(this, ViewDashboard.class);
+        startActivity(intent);
     }
 
     private void getPlaylist()
@@ -145,6 +161,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         bPlayStop.setVisibility(View.VISIBLE);
         bNextTrack.setVisibility(View.VISIBLE);
         bAddSongs.setVisibility(View.VISIBLE);
+        bDashboard.setVisibility(View.VISIBLE);
         bNextTrack.setActivated(false);
 
         List<String> arr = new ArrayList();

@@ -55,4 +55,10 @@
         android:layout_height="wrap_content"
         android:text="Add Songs"/>
 
+    <Button
+        android:id="@+id/PlayerDashboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dashboard"/>
+
 </LinearLayout>

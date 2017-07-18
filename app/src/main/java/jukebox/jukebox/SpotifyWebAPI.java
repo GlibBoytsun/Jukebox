@@ -74,4 +74,37 @@ public class SpotifyWebAPI
             }
         }).start();
     }
+
+    public static void GetUserName(final Function<String[], Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    //String data = "type=track&q=" + URLEncoder.encode(filter, "UTF-8");
+                    URLConnection connection = connectionOpen("https://api.spotify.com/v1/me", "");
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    JSONObject o = new JSONObject(s);
+                    String name = o.getString("display_name");
+                    String id = o.getString("id");
+                    if (name == "null")
+                        name = id;
+
+                    callback.apply(new String[] {id, name });
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
 }

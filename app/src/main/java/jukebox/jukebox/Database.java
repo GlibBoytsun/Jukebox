@@ -266,7 +266,7 @@ public class Database
 
                     connection = connectionOpen();
                     data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
-                                    "insert into jukebox.playlistSongs (playlistID, songID, songIndex) values (" + groupID + ", " +
+                            "insert into jukebox.playlistSongs (playlistID, songID, songIndex) values (" + groupID + ", " +
                                     id + ", " + ind + ");",
                             "UTF-8");
                     wr = new OutputStreamWriter(connection.getOutputStream());
@@ -278,6 +278,138 @@ public class Database
                         s += t;
 
                     callback.apply(null);
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void GetUserID(final String UID, final String name, final Function<Integer, Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    URLConnection connection = connectionOpen();
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "INSERT INTO jukebox.users (Name, UID) " +
+                                    "select \"" + name + "\", \"" + UID + "\" from dual " +
+                                    "WHERE not exists (select 1 from jukebox.users where UID like \"" + UID + "\");",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    connection = connectionOpen();
+                    data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "select id from jukebox.users where UID like \"" + UID + "\";",
+                            "UTF-8");
+                    wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    s = "";
+                    while((t = reader.readLine()) != null)
+                        s += t;
+                    int id = new JSONArray(s).getJSONObject(0).getInt("id");
+
+                    callback.apply(id);
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void GetUserStats(final int userID, final Function<double[], Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                URLConnection connection = connectionOpen();
+
+                try
+                {
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "select sum(time) as time, sum(distance) as distance from jukebox.data " +
+                                    "where userID = " + String.valueOf(userID) + ";",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    JSONObject jo = new JSONArray(s).getJSONObject(0);
+                    double time = jo.getDouble("time");
+                    double distance = jo.getDouble("distance");
+
+                    callback.apply(new double[] { time, distance });
+                }
+                catch (Exception e)
+                {
+                    callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void GetLeaderboard(final int groupID, final String type, final Function<ArrayList<UserStats>, Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                URLConnection connection = connectionOpen();
+
+                try
+                {
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "select users.name, data.time, data.distance, (data.distance / data.time) as speed from jukebox.data join jukebox.users on data.userID = users.ID " +
+                                    "where data.groupID = " + groupID + " order by " + type.toLowerCase() + ";",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    String s = "", t;
+                    while((t = reader.readLine()) != null)
+                        s += t;
+
+                    ArrayList<UserStats> result = new ArrayList<>();
+                    JSONArray arr = new JSONArray(s);
+                    JSONObject jo;
+                    for (int i = 0; i < arr.length(); i++)
+                    {
+                        jo = arr.getJSONObject(i);
+                        UserStats v = new UserStats();
+                        v.name = jo.getString("name");
+                        v.time = jo.getDouble("time");
+                        v.distance = jo.getDouble("distance");
+                        v.speed = jo.getDouble("speed");
+                        result.add(v);
+                    }
+
+                    callback.apply(result);
                 }
                 catch (Exception e)
                 {
