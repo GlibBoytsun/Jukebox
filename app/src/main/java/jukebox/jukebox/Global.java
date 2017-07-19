@@ -10,4 +10,5 @@ public class Global
     public static Group group;
     public static int userID;
     public static String userName;
+    public static BackgroundService bgService;
 }

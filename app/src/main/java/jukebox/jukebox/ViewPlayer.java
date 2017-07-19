@@ -3,6 +3,7 @@ package jukebox.jukebox;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -54,6 +55,20 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         setContentView(R.layout.activity_player);
         setTitle("Player");
         //init();
+
+        if (Global.bgService == null)
+        {
+            Global.bgService = BackgroundService.GetInstance();
+            Global.bgService.Initialize(this, this, new Function<Location, Object>()
+            {
+                @Override
+                public Object apply(Location location)
+                {
+                    locationCallback(location);
+                    return null;
+                }
+            });
+        }
     }
 
     void init()
@@ -203,6 +218,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             startTime.add(Calendar.SECOND, 5);
             Database.SetNextSong(Global.group.id, 0, startTime.getTimeInMillis());
             bAddSongs.setEnabled(false);
+            bDashboard.setEnabled(false);
         }
         else if (bPlayStop.getText() == "Stop")
         {
@@ -210,14 +226,18 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             Log.d("D", "p1");
             Database.SetNextSong(Global.group.id, -1, Calendar.getInstance().getTimeInMillis());
             curSong = null;
+            trackingStop();
             nextState.songIndex = -1;
             bNextTrack.setActivated(true);
             bAddSongs.setEnabled(true);
+            bDashboard.setEnabled(true);
         }
     }
 
     public void bNextTrack_OnClick(View v)
     {
+        if (nextState == null)
+            return;
         Calendar startTime = (Calendar)nextState.curTime.clone();
         startTime.add(Calendar.SECOND, 3);
         Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
@@ -303,6 +323,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                     curSong = Global.group.GetSongByIndex(nextState.songIndex);
                     spotifyTimer = null;
                     Global.player.resume(mOperationCallback);
+                    trackingStart();
                 }
             }, diff);
         }
@@ -316,6 +337,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
             diff = 0;
         Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, diff);
         curSong = Global.group.GetSongByIndex(nextState.songIndex);
+        trackingStart();
     }
 
     private void updateOnlineState()
@@ -332,59 +354,146 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    boolean lock = false;
     private void NextStateCallback()
     {
-        if (nextState != null && nextState.songIndex != -1)
+        while (lock) ;
+        lock = true;
+        try
         {
-            //check if song is still playing. If not - update db
-            Calendar maxSong = (Calendar)nextState.startTime.clone();
-            //maxSong.setTime(nextState.startTime);
-            maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
-            if (maxSong.getTimeInMillis() < nextState.curTime.getTimeInMillis())
+            if (nextState != null && nextState.songIndex != -1)
             {
-                Log.d("D", "1");
-                if (isMaster)
+                //check if song is still playing. If not - update db
+                Calendar maxSong = (Calendar) nextState.startTime.clone();
+                //maxSong.setTime(nextState.startTime);
+                try
                 {
-                    Log.d("D", "11");
-                    Calendar startTime = (Calendar)nextState.curTime.clone();
-                    startTime.add(Calendar.SECOND, 2);
-                    Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
+                    maxSong.add(Calendar.SECOND, Global.group.GetSongByIndex(nextState.songIndex).duration);
                 }
-                Log.d("D", "12");
-                nextState.songIndex = -1;
-                if (curSong != null)
+                catch (Exception e)
                 {
-                    Log.d("D", "13");
-                    curSong = null;
-                    Global.player.pause(mOperationCallback);
-                    Log.d("D", "p2");
+
+                }
+                if (maxSong.getTimeInMillis() < nextState.curTime.getTimeInMillis())
+                {
+                    Log.d("D", "1");
+                    if (isMaster)
+                    {
+                        Log.d("D", "11");
+                        bDashboard.setEnabled(false);
+                        Calendar startTime = (Calendar) nextState.curTime.clone();
+                        startTime.add(Calendar.SECOND, 2);
+                        Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
+                    }
+                    Log.d("D", "12");
+                    nextState.songIndex = -1;
+                    if (curSong != null)
+                    {
+                        Log.d("D", "13");
+                        curSong = null;
+                        Global.player.pause(mOperationCallback);
+                        bDashboard.setEnabled(true);
+                        trackingStop();
+                        Log.d("D", "p2");
+                    }
+                }
+                else if (nextState.curTime.getTimeInMillis() < nextState.startTime.getTimeInMillis())
+                {
+                    Log.d("D", "2");
+                    //start buffering
+                    if (spotifyTimer == null)
+                        spotifyDelayedPlay(nextState.startTime);
+                }
+                else
+                {
+                    Log.d("D", "3");
+                    if (curSong == null && spotifyTimer == null)
+                        spotifyImmediatePlay();
                 }
             }
-            else if (nextState.curTime.getTimeInMillis() < nextState.startTime.getTimeInMillis())
+            else if (curSong != null)
             {
-                Log.d("D", "2");
-                //start buffering
-                if (spotifyTimer == null)
-                    spotifyDelayedPlay(nextState.startTime);
-            }
-            else
-            {
-                Log.d("D", "3");
-                if (curSong == null && spotifyTimer == null)
-                    spotifyImmediatePlay();
+                Log.d("D", "4");
+                isMaster = false;
+                curSong = null;
+                bDashboard.setEnabled(true);
+                Global.player.pause(mOperationCallback);
+                trackingStop();
+                Log.d("D", "p3");
             }
         }
-        else if (curSong != null)
+        catch (Exception e)
         {
-            Log.d("D", "4");
-            isMaster = false;
-            curSong = null;
-            Global.player.pause(mOperationCallback);
-            Log.d("D", "p3");
+            int asdf = 0;
         }
 
+        lock = false;
         updatePlayerState();
     }
+
+
+
+    ArrayList<Location> locations = new ArrayList<>();
+    ArrayList<Integer> songs = new ArrayList<>();
+    long time = 0;
+    Calendar lastCallback = null;
+
+    private void trackingStart()
+    {
+        lastCallback = Calendar.getInstance();
+        Global.bgService.Start();
+    }
+
+    private void trackingStop()
+    {
+        Global.bgService.Stop();
+
+        if (locations.size() != 0)
+        {
+            double distance = 0;
+            String locs = "";
+            String s = "";
+
+            locs = locations.get(0).getLatitude() + "," + locations.get(0).getLongitude();
+            for (int i = 1; i < locations.size(); i++)
+            {
+                locs += ";" + locations.get(i).getLatitude() + "," + locations.get(i).getLongitude();
+                distance += Utils.GPSDistance(locations.get(i - 1).getLatitude(), locations.get(i - 1).getLongitude(), locations.get(i).getLatitude(), locations.get(i).getLongitude());
+            }
+
+            if (songs.size() != 0)
+            {
+                s = songs.get(0).toString();
+                for (int i = 1; i < songs.size(); i++)
+                    s += ";" + songs.get(i).toString();
+            }
+
+            Database.PostData(Global.userID, Global.group.id, s, locs, (int)(time / 1000), distance, null);
+        }
+
+        trackingReset();
+    }
+
+    private void trackingReset()
+    {
+        time = 0;
+        lastCallback = null;
+        locations.clear();
+        songs.clear();
+    }
+
+    private void locationCallback(Location l)
+    {
+        if (curSong == null)
+            return;
+        locations.add(new Location(l));
+        songs.add(curSong.id);
+        Calendar now = Calendar.getInstance();
+        time += now.getTimeInMillis() - lastCallback.getTimeInMillis();
+        lastCallback = now;
+    }
+
+
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int index, long l)

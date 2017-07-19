@@ -5,7 +5,7 @@ public class Utils
     private Utils() { } //Thank you, Java, for not having static classes /s
 
     // https://stackoverflow.com/questions/837872/calculate-distance-in-meters-when-you-know-longitude-and-latitude-in-java
-    public static double GPSDistance(float lat1, float lng1, float lat2, float lng2)
+    public static double GPSDistance(double lat1, double lng1, double lat2, double lng2)
     {
         double earthRadius = 6371000; //meters
         double dLat = Math.toRadians(lat2-lat1);

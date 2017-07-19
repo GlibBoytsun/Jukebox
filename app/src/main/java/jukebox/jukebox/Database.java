@@ -384,7 +384,7 @@ public class Database
                 {
                     String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
                             "select users.name, data.time, data.distance, (data.distance / data.time) as speed from jukebox.data join jukebox.users on data.userID = users.ID " +
-                                    "where data.groupID = " + groupID + " order by " + type.toLowerCase() + ";",
+                                    "where data.groupID = " + groupID + " order by " + type.toLowerCase() + " desc;",
                             "UTF-8");
                     OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
                     wr.write(data);
@@ -405,7 +405,14 @@ public class Database
                         v.name = jo.getString("name");
                         v.time = jo.getDouble("time");
                         v.distance = jo.getDouble("distance");
-                        v.speed = jo.getDouble("speed");
+                        try
+                        {
+                            v.speed = jo.getDouble("speed");
+                        }
+                        catch(Exception e)
+                        {
+
+                        }
                         result.add(v);
                     }
 
@@ -414,6 +421,38 @@ public class Database
                 catch (Exception e)
                 {
                     callback.apply(null);
+                }
+            }
+        }).start();
+    }
+
+    public static void PostData(final int UserID, final int GroupID, final String songs, final String locations, final int time, final double distance, final Function<Object, Object> callback)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    URLConnection connection = connectionOpen();
+                    String data = URLEncoder.encode("input", "UTF-8") + "=" + URLEncoder.encode(
+                            "insert into jukebox.data (userID, groupID, dateEnd, songs, locationHistory, time, distance) " +
+                                    "values (" + UserID + ", " + GroupID + ", now(), \"" + songs + "\", \"" + locations + "\", " + time + ", " + distance + ");",
+                            "UTF-8");
+                    OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+                    wr.write(data);
+                    wr.flush();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    while(reader.readLine() != null) ;
+
+                    if (callback != null)
+                        callback.apply(null);
+                }
+                catch (Exception e)
+                {
+                    if (callback != null)
+                        callback.apply(null);
                 }
             }
         }).start();
