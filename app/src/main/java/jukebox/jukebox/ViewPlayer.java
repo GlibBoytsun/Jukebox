@@ -448,7 +448,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     {
         Global.bgService.Stop();
 
-        if (locations.size() != 0)
+        if (locations.size() != 0 && time != 0)
         {
             double distance = 0;
             String locs = "";

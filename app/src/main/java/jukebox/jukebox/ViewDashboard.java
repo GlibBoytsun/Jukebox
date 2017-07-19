@@ -88,9 +88,18 @@ public class ViewDashboard extends AppCompatActivity
             @Override
             public void run()
             {
-                lTime.setText("Total workout time: " + Utils.TimeToText((long)stats[0]));
-                lDistance.setText("Total distance traveled: " + Utils.Round(stats[1], 2) + "m");
-                lSpeed.setText("Average speed: " + Utils.Round(stats[1] / stats[0], 2) + "m/s");
+                if (stats != null)
+                {
+                    lTime.setText("Total workout time: " + Utils.TimeToText((long) stats[0]));
+                    lDistance.setText("Total distance traveled: " + Utils.Round(stats[1], 2) + "m");
+                    lSpeed.setText("Average speed: " + Utils.Round(stats[1] / stats[0], 2) + "m/s");
+                }
+                else
+                {
+                    lTime.setText("Total workout time: 00:00:00");
+                    lDistance.setText("Total distance traveled: 0m");
+                    lSpeed.setText("Average speed: 0m/s");
+                }
             }
         });
     }
