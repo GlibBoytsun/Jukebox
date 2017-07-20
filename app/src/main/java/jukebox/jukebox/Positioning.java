@@ -1,7 +1,12 @@
 package jukebox.jukebox;
 
-//TODO reference
+
+//TODO
+// This class is taken from a WAYt project and was implemented by JABYS team as part of
+// Dalhousie Fall 2016 course CSCI5708 Mobile Computing.
+
 /*
+* Original reference:
 * Logic to how to obtain current position
 * Title: Obtain position via GPS
 * Author: Metcalfe.C
@@ -23,21 +28,22 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+// Class that is responsible for retrieving GPS position
 public class Positioning
 {
     private final static int PERMISSION_REQUEST = 1;
 
-    private LocationManager locManager;
-    private Location lastLocation;
-    private boolean isActive = false;
-    private boolean hasPermission = false;
-    private Context context;
-    private Activity activity;
+    private LocationManager locManager; // Android location manager
+    private Location lastLocation; // Last retreived location
+    private boolean isActive = false; // Is GPS activity currently active?
+    private Context context; // Current context
+    private Activity activity; // Current activity
 
     protected Runnable UpdateCallback = null;
 
 
 
+    // GPS activity change listener
     private LocationListener locListener = new LocationListener()
     {
         public void onLocationChanged(Location loc)
@@ -45,29 +51,26 @@ public class Positioning
             updateLocation(loc);
         }
 
-        public void onProviderEnabled(String provider)
-        {
-            hasPermission = true;
+        public void onProviderEnabled(String provider) {
         }
 
-        public void onProviderDisabled(String provider)
-        {
-            hasPermission = false;
+        public void onProviderDisabled(String provider) {
         }
 
-        public void onStatusChanged(String provider, int status, Bundle extras)
-        {
+        public void onStatusChanged(String provider, int status, Bundle extras) {
         }
     };
 
 
 
+    // ctor
     public Positioning(Context _context, Activity _activity)
     {
         context = _context;
         activity = _activity;
     }
 
+    // Starts GPS activity. Requests permission if necessary
     public void Start()
     {
         try
@@ -85,6 +88,7 @@ public class Positioning
         }
     }
 
+    // Stops GPS activity
     public void Stop()
     {
         try
@@ -97,29 +101,22 @@ public class Positioning
         isActive = false;
     }
 
+    // Location getter
     public Location GetLocation()
     {
         return lastLocation;
     }
 
-    public boolean IsActive()
-    {
-        return isActive;
-    }
-
-    public boolean HasPermission()
-    {
-        return hasPermission;
-    }
 
 
-
+    // Validates location
     private boolean validLocation(Location location)
     {
         // If it takes more than 30 seconds to obtain location then the result is disregarded
         return location != null && SystemClock.elapsedRealtime() - location.getElapsedRealtimeNanos() < 30e9;
     }
 
+    // Checks new location validity and invokes a callback if one is set
     private void updateLocation(Location location)
     {
         // Check if location is obtained
@@ -135,15 +132,7 @@ public class Positioning
         }
     }
 
-    /*
-    public void openLocationSettings(View view)
-    {
-        if (!locManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-        {
-            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-        }
-    }//*/
-
+    // Starts GPS activity
     private void startRequestingLocation()
     {
         if (!locManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
@@ -162,8 +151,7 @@ public class Positioning
             return;
         }
 
-        //Start requesting location is possible
-
+        //Start requesting location is possible. This has to be done on main thread
         new Handler(Looper.getMainLooper()).post(new Runnable()
         {
             @Override
@@ -175,6 +163,7 @@ public class Positioning
         //locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locListener);
     }
 
+    // Actually starts GPS activity
     private void doStart()
     {
         try

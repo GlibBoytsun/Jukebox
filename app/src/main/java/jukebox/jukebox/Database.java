@@ -14,17 +14,18 @@ import java.util.Calendar;
 import java.util.Date;
 
 
+// Class for handling all database queries. All interactions are done through a REST service
+// All queries are executed in separate threads. Queries are encoded and passed as part of URL.
+// Data is returned in JSON format. It is parsed and a callback function is called with obtained data.
 public class Database
 {
     private Database() { } //Thank you, Java, for not having static classes /s
 
 
 
+    // Opens and initializes a connection to the REST service
     private static URLConnection connectionOpen()
     {
-        //if (connection != null)
-        //    return;
-
         try
         {
             URL url = new URL("http://lowcost-env.8c9rdb3rdt.us-east-1.elasticbeanstalk.com/");
@@ -41,6 +42,7 @@ public class Database
 
 
 
+    // Retrieves a list of all registered groups
     public static void GetGroups(final Function<ArrayList<Group>, Object> callback)
     {
         new Thread(new Runnable()
@@ -84,6 +86,7 @@ public class Database
         }).start();
     }
 
+    // Retrieves a playlist of a given group
     public static void GetPlaylist(final int groupID, final Function<ArrayList<Song>, Object> callback)
     {
         new Thread(new Runnable()
@@ -136,6 +139,7 @@ public class Database
         }).start();
     }
 
+    // Retrieves player state for a given group (which song is playing and when did/will it start playing)
     public static void GetPlayerState(final int groupID, final Function<PlayerState, Object> callback)
     {
         new Thread(new Runnable()
@@ -182,6 +186,7 @@ public class Database
         }).start();
     }
 
+    // Sets next song to be played
     public static void SetNextSong(final int groupID, final int nextIndex, final long nextStartTime)
     {
         new Thread(new Runnable()
@@ -209,6 +214,7 @@ public class Database
         }).start();
     }
 
+    // Adds specified song to the playlist
     public static void AddSong(final int groupID, final Song song, final Function<Object, Object> callback)
     {
         new Thread(new Runnable()
@@ -287,6 +293,7 @@ public class Database
         }).start();
     }
 
+    // Gets user ID that is associated with the given Spotify account
     public static void GetUserID(final String UID, final String name, final Function<Integer, Object> callback)
     {
         new Thread(new Runnable()
@@ -333,6 +340,7 @@ public class Database
         }).start();
     }
 
+    // Retrieves user statistics for all groups
     public static void GetUserStats(final int userID, final Function<double[], Object> callback)
     {
         new Thread(new Runnable()
@@ -371,6 +379,7 @@ public class Database
         }).start();
     }
 
+    // Retrieves leaderboard for a given group. Supports multiple sorting types (distance, time, speed)
     public static void GetLeaderboard(final int groupID, final String type, final Function<ArrayList<UserStats>, Object> callback)
     {
         new Thread(new Runnable()
@@ -426,6 +435,7 @@ public class Database
         }).start();
     }
 
+    // Submits workout statistics
     public static void PostData(final int UserID, final int GroupID, final String songs, final String locations, final int time, final double distance, final Function<Object, Object> callback)
     {
         new Thread(new Runnable()

@@ -13,16 +13,18 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 
 
+// Class for handling all Spotify queries. All interactions are done through a REST API
+// All queries are executed in separate threads. Queries are encoded and passed as part of URL.
+// Data is returned in JSON format. It is parsed and a callback function is called with obtained data.
 public class SpotifyWebAPI
 {
+    // Creates a connection to the Spotify REST API and sets user OAuth token
     private static URLConnection connectionOpen(String surl, String params)
     {
         try
         {
             URL url = new URL(surl + (params == "" ? "" : ("?" + params)));
             URLConnection connection = url.openConnection();
-            //connection.setDoInput(true);
-            //connection.setDoOutput(true);
             connection.setRequestProperty("Authorization", "Bearer " + Global.playerConfig.oauthToken);
             return connection;
         }
@@ -32,6 +34,7 @@ public class SpotifyWebAPI
         }
     }
 
+    // Returns a list of songs that correspond to a specified search query
     public static void SearchSongs(final String filter, final Function<ArrayList<Song>, Object> callback)
     {
         new Thread(new Runnable()
@@ -75,6 +78,7 @@ public class SpotifyWebAPI
         }).start();
     }
 
+    // Retrieves user's Spotify username
     public static void GetUserName(final Function<String[], Object> callback)
     {
         new Thread(new Runnable()

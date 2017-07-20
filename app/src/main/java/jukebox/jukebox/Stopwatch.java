@@ -9,7 +9,10 @@ import android.os.SystemClock;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO reference
+//TODO
+// This class is taken from a WAYt project and was implemented by JABYS team as part of
+// Dalhousie Fall 2016 course CSCI5708 Mobile Computing.
+
 /**
  Stopwatch that works even when the app is closed. Its tickrate can vary slightly in order to optimize battery usage
  Example of usage
