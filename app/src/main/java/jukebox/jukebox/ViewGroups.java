@@ -19,12 +19,15 @@ import java.util.List;
 
 public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemClickListener
 {
-    Context context;
+    Context context;// Current context
+    ArrayList<Group> groups;// List of retrieved groups
+
+    //UI elements
     TextView lInfo;
     Button bRetry;
     ListView lbGroups;
-    ArrayList<Group> groups;
 
+    //Initialize view, retrieve all UI elements and register event handlers
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -47,6 +50,7 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         updateGroups();
     }
 
+    // Registers / logins current Spotify user. Obtains user's Spotify name and ID
     private void retrieveUser()
     {
         SpotifyWebAPI.GetUserName(new Function<String[], Object>()
@@ -60,6 +64,7 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    // Registers / logins current Spotify user. Callback for Spotify ID. Stores user's Spotify name and ID and queries Database for their ID
     private void userNameRetrieved(String id, String name)
     {
         Global.userName = name;
@@ -74,15 +79,18 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    // Callback for Database ID. Stores user's ID
     private void userIDRetrieved(int id)
     {
         Global.userID = id;
     }
 
+    // Retrieves list of registered groups from the Database
     private void updateGroups()
     {
         Database.GetGroups(new Function<ArrayList<Group>, Object>()
         {
+            //Saves retrieved list and updates ListView
             @Override
             public Object apply(ArrayList<Group> g)
             {
@@ -114,6 +122,7 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    // Retry button click handler. Re-retrieves list of groups
     public void bRetry_OnClick(View v)
     {
         lInfo.setText("Retrieving list of groups...");
@@ -121,6 +130,7 @@ public class ViewGroups extends AppCompatActivity implements AdapterView.OnItemC
         updateGroups();
     }
 
+    //ListView item click handler. Retrieves selected group and navigates user to the Player view
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int index, long l)
     {

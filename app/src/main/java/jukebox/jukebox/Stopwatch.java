@@ -30,8 +30,9 @@ import java.util.Map;
 public class Stopwatch
 {
 
-    static Map<Integer, Stopwatch> activeStopwatches = new HashMap<Integer, Stopwatch>();
+    static Map<Integer, Stopwatch> activeStopwatches = new HashMap<Integer, Stopwatch>(); // Map that relates all active Stopwatches to their IDs
 
+    // Description of Stopwatch interval. [Min, Min + Duration]
     private int intervalDesired;
     private int intervalMin = 9000;
     private int intervalDuration = 11000;
@@ -42,12 +43,14 @@ public class Stopwatch
     private boolean isRunning = false;
     private Runnable callback;
 
+    // References to external handlers
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
     private Context context;
 
 
 
+    // ctor
     public Stopwatch(Context _context, int desiredInterval, int maxIntervalDeviation, Runnable _callback)
     {
         context = _context;
@@ -57,13 +60,7 @@ public class Stopwatch
         callback = _callback;
     }
 
-    public void SetInterval(int desiredInterval, int maxIntervalDeviation)
-    {
-        intervalDesired = desiredInterval;
-        intervalMin = desiredInterval - maxIntervalDeviation;
-        intervalDuration = maxIntervalDeviation * 2;
-    }
-
+    //Starts the Stopwatch by registering and scheduling it
     public void Start()
     {
         if (isRunning)
@@ -76,6 +73,7 @@ public class Stopwatch
         createAlarm();
     }
 
+    // Schedules next tick using AlarmManager
     /*
      * Two functions below are inspired by Android Developers documentation
      * Title: Scheduling Repeating Alarms
@@ -91,11 +89,13 @@ public class Stopwatch
         alarmManager.setWindow(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + intervalMin, intervalDuration, alarmIntent);
     }
 
+    // Cancels scheduled tick
     private void cancelAlarm()
     {
         alarmManager.cancel(alarmIntent);
     }
 
+    // Stops Stopwatch by de-registering it and canceling scheduled tick
     public void Stop()
     {
         if (!isRunning)
@@ -106,26 +106,12 @@ public class Stopwatch
         timePassed = 0;
     }
 
+    // Tick handler. Invokes callback if one is set
     void tick()
     {
         timePassed += intervalDesired;
         createAlarm();
         if (callback != null)
             callback.run();
-    }
-
-    public int GetTimePassed()
-    {
-        return timePassed;
-    }
-
-    public boolean IsRunning()
-    {
-        return isRunning;
-    }
-
-    public int GetInterval()
-    {
-        return intervalDesired;
     }
 }

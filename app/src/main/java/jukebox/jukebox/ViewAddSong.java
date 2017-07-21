@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+// View for adding songs to group playlist
 public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItemClickListener
 {
-    Context context;
-    ArrayList<Song> curSongs = null;
+    Context context;// Current context
+    ArrayList<Song> curSongs = null;// Currently listed songs
 
+    // UI elements
     EditText tbFilter;
     Button bSearch;
     TextView lState;
@@ -29,6 +31,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
 
 
 
+    //Initialize view, retrieve all UI elements and register event handlers
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -53,6 +56,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
         lbSongs.setOnItemClickListener(this);
     }
 
+    // Invoked when the Search button is clicked. Queries Spotify for a list of songs that match entered string
     void bSearch_OnClick()
     {
         if (tbFilter.getText().length() != 0)
@@ -72,6 +76,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
         }
     }
 
+    // Callback for when list of songs is retrieved from Spotify. Saves and displays the obtained list
     void OnSongsRetrieved(ArrayList<Song> songs)
     {
         curSongs = songs;
@@ -84,6 +89,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
         UpdateSongsList();
     }
 
+    // Sets state text. Purely user-informative
     void SetStateText(final String s)
     {
         new Handler(Looper.getMainLooper()).post(new Runnable()
@@ -96,6 +102,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
         });
     }
 
+    // Updates list of songs. Has to be performed in main thread
     void UpdateSongsList()
     {
         new Handler(Looper.getMainLooper()).post(new Runnable()
@@ -113,6 +120,7 @@ public class ViewAddSong extends AppCompatActivity implements AdapterView.OnItem
         });
     }
 
+    // List click handler. Retrieves clicked song, adds it to the group playlist and exits current view
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
     {

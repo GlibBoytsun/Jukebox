@@ -9,8 +9,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+// View for displaying user stats
 public class ViewDashboard extends AppCompatActivity
 {
+    //UI elements
     TextView lWelcome;
     TextView lTime;
     TextView lDistance;
@@ -19,6 +21,7 @@ public class ViewDashboard extends AppCompatActivity
     Button bLeaderboardDistance;
     Button bLeaderboardSpeed;
 
+    //Initialize view, retrieve all UI elements and register event handlers
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -61,6 +64,7 @@ public class ViewDashboard extends AppCompatActivity
         retrieveInformation();
     }
 
+    // Leaderboard buttons click handler. Displays Leaderboard view with appropriate filter
     private void bLeaderboard_OnClick(String type)
     {
         Intent intent = new Intent(this, ViewLeaderboard.class);
@@ -68,6 +72,7 @@ public class ViewDashboard extends AppCompatActivity
         startActivity(intent);
     }
 
+    // Query database to retrieve stats
     private void retrieveInformation()
     {
         Database.GetUserStats(Global.userID, new Function<double[], Object>()
@@ -81,6 +86,7 @@ public class ViewDashboard extends AppCompatActivity
         });
     }
 
+    // Database callback for retrieved stats. Obtained information is displayed in TextViews
     private void onStatsRetrieved(final double[] stats)
     {
         new Handler(Looper.getMainLooper()).post(new Runnable()

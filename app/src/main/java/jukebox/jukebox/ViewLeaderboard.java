@@ -5,22 +5,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ViewLeaderboard extends AppCompatActivity
 {
+    // UI element
     ListView lbList;
 
-    String type;
-    Context context;
+    String type;// Leaderboard type (distance, time, speed)
+    Context context;// Current context
 
+    // Initialize view, retrieve all UI elements and register event handlers
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -35,6 +34,7 @@ public class ViewLeaderboard extends AppCompatActivity
         retrieveLeaderboard();
     }
 
+    // Queries Database for the leaderboard
     private void retrieveLeaderboard()
     {
         Database.GetLeaderboard(Global.group.id, type, new Function<ArrayList<UserStats>, Object>()
@@ -55,6 +55,7 @@ public class ViewLeaderboard extends AppCompatActivity
         });
     }
 
+    // Updates the leaderboard ListView
     private void leaderboardRetrieved(ArrayList<UserStats> stats)
     {
         List<String> arr = new ArrayList();

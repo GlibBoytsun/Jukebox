@@ -23,8 +23,14 @@ import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
-//REFERENCE
-//Almost all code in this class is taken from the Spotify Android SDK (https://github.com/spotify/android-sdk)
+// Main view. Allows user to log in with their Spotify account
+/*
+* Almost all code in this class is taken from the Spotify Android SDK
+* Title: Spotify SDK for Android devices
+* Author: spotify
+* Date: May 3, 2017
+* Availability: https://github.com/spotify/android-sdk
+*/
 public class ViewMain extends AppCompatActivity implements Player.NotificationCallback, ConnectionStateCallback
 {
     private static final int REQUEST_CODE = 1337;
@@ -33,6 +39,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
 
     private SpotifyPlayer mPlayer;
 
+    // Initializes current view
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -42,18 +49,20 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
 
 
 
+    // Spotify operation callback. Effectively does nothing.
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.d("a", "Operation callback successful");
+
         }
 
         @Override
         public void onError(Error error) {
-            Log.d("a", "Operation callback error");
+
         }
     };
 
+    // Opens Spotify login window
     public void openLoginWindow(View v) {
         final AuthenticationRequest request = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI)
                 .setScopes(new String[]{"user-read-private", "playlist-read", "playlist-read-private", "streaming"})
@@ -62,6 +71,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
+    // Spotify login window callback
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
@@ -74,15 +84,14 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
                     break;
 
                 case ERROR:
-                    Log.d("a", "Auth error");
                     break;
 
                 default:
-                    Log.d("a", "Auth default");
             }
         }
     }
 
+    // Authentication handler. Creates Spotify player instance after user has logged in. Opens Group view afterwards.
     private void onAuthenticationComplete(AuthenticationResponse authResponse) {
         if (mPlayer == null) {
             Config playerConfig = new Config(getApplicationContext(), authResponse.getAccessToken(), CLIENT_ID);
@@ -107,6 +116,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         }
     }
 
+    // Opens Group view
     private void openGroupView()
     {
         new Handler(Looper.getMainLooper()).post(new Runnable()
@@ -120,6 +130,7 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         });
     }
 
+    // Returns network connectivity status (online / offline)
     private Connectivity getNetworkConnectivity(Context context) {
         ConnectivityManager connectivityManager;
         connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -131,47 +142,52 @@ public class ViewMain extends AppCompatActivity implements Player.NotificationCa
         }
     }
 
+    // Unused callback
     @Override
     public void onLoggedIn()
     {
         Log.d("a", "Logged in");
     }
 
+    // Unused callback
     @Override
     public void onLoggedOut()
     {
         Log.d("a", "Logged out");
     }
 
+    // Unused callback
     @Override
     public void onLoginFailed(Error error)
     {
         Log.d("a", "Login failed");
     }
 
+    // Unused callback
     @Override
     public void onTemporaryError()
     {
         Log.d("a", "Temporary error");
     }
 
+    // Unused callback
     @Override
     public void onConnectionMessage(String s)
     {
         Log.d("a", "Connection message");
     }
 
+    // Unused callback
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent)
     {
          Log.d("a", "Playback event");
     }
 
+    // Unused callback
     @Override
     public void onPlaybackError(Error error)
     {
         Log.d("a", "Playback error");
     }
 }
-
-//Reference for most of the code in this file is provided before declaration of this class
