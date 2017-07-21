@@ -27,9 +27,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-//TODO timed playlist updates
 public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemClickListener
 {
+    // UI elements
     Context context;
     TextView lInfo;
     Button bRetry;
@@ -41,13 +41,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     Button bAddSongs;
     Button bDashboard;
 
-    Song curSong = null;
-    PlayerState nextState = null;
-    Timer updateTimer = null;
-    Timer spotifyTimer = null;
+    Song curSong = null;// Current song
+    PlayerState nextState = null;// Next song
+    Timer updateTimer = null;// Timer for UI updates
+    Timer spotifyTimer = null;// Timer for delayed playback
 
-    boolean isMaster = false;
+    boolean isMaster = false;// Whoever clicks Play is the master. They control the database and initialize next song playback
 
+    // Initialize view and instantiates BackgroundService
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -71,6 +72,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         }
     }
 
+    // Retrieve all UI elements and register event handlers
     void init()
     {
         context = this;
@@ -115,6 +117,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         getPlaylist();
     }
 
+    // Invoked when this activity is resumed. Re-initializes the view
     @Override
     protected void onResume()
     {
@@ -122,18 +125,21 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         init();
     }
 
+    // Add Song click handler. Opens AddSong view
     void bAddSong_OnClick()
     {
         Intent intent = new Intent(this, ViewAddSong.class);
         startActivity(intent);
     }
 
+    // Dashboard click handler. Opens Dashboard view
     void bDashboard_OnClick()
     {
         Intent intent = new Intent(this, ViewDashboard.class);
         startActivity(intent);
     }
 
+    // Queries database for group playlist
     private void getPlaylist()
     {
         Database.GetPlaylist(Global.group.id, new Function<ArrayList<Song>, Object>()
@@ -157,6 +163,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    // Database callback for retrieved playlist. Adjusts UI accordingly
     void PlaylistRetrieved()
     {
         ArrayList<Song> songs = Global.group.playlist;
@@ -199,6 +206,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         }, 0, 1000);
     }
 
+    // Retry click handler. Re-queries Database for group playlist
     public void bRetry_OnClick(View v)
     {
         lInfo.setText("Retrieving playlist...");
@@ -206,6 +214,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         getPlaylist();
     }
 
+    // Play/Stop click handler. Initializes/stops playback and synchronizes it across all devices.
     public void bPlayStop_OnClick(View v)
     {
         bNextTrack.setActivated(false);
@@ -234,6 +243,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         }
     }
 
+    // Next track click handler. Updates Database with next song information
     public void bNextTrack_OnClick(View v)
     {
         if (nextState == null)
@@ -244,6 +254,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         bNextTrack.setActivated(false);
     }
 
+    // UI update handler
     private void updatePlayerState()
     {
         new Handler(Looper.getMainLooper()).post(new Runnable()
@@ -300,6 +311,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         });
     }
 
+    // Plays next song at the specified time
     private void spotifyDelayedPlay(final Calendar startTime)
     {
         Log.d("D", "delayed");
@@ -329,6 +341,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         }
     }
 
+    // Immediately starts song playback. Can start playback mid-song to be synchronous with other devices
     private void spotifyImmediatePlay()
     {
         Log.d("D", "immediate");
@@ -340,6 +353,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         trackingStart();
     }
 
+    // Queries database for player state
     private void updateOnlineState()
     {
         Database.GetPlayerState(Global.group.id, new Function<PlayerState, Object>()
@@ -355,13 +369,15 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
     }
 
     boolean lock = false;
+
+    //Database player state callback. Handles synchronous playback
     private void NextStateCallback()
     {
         while (lock) ;
         lock = true;
         try
         {
-            if (nextState != null && nextState.songIndex != -1)
+            if (nextState != null && nextState.songIndex != -1)// Database song is set
             {
                 //check if song is still playing. If not - update db
                 Calendar maxSong = (Calendar) nextState.startTime.clone();
@@ -374,52 +390,43 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                 {
 
                 }
-                if (maxSong.getTimeInMillis() < nextState.curTime.getTimeInMillis())
+                if (maxSong.getTimeInMillis() < nextState.curTime.getTimeInMillis())// Song is over
                 {
-                    Log.d("D", "1");
-                    if (isMaster)
+                    if (isMaster)// Master sets next song
                     {
-                        Log.d("D", "11");
                         bDashboard.setEnabled(false);
                         Calendar startTime = (Calendar) nextState.curTime.clone();
                         startTime.add(Calendar.SECOND, 2);
                         Database.SetNextSong(Global.group.id, (nextState.songIndex + 1) % Global.group.playlist.size(), startTime.getTimeInMillis());
                     }
-                    Log.d("D", "12");
                     nextState.songIndex = -1;
-                    if (curSong != null)
+                    if (curSong != null)// Stop playback until next song is set
                     {
-                        Log.d("D", "13");
                         curSong = null;
                         Global.player.pause(mOperationCallback);
                         bDashboard.setEnabled(true);
                         trackingStop();
-                        Log.d("D", "p2");
                     }
                 }
-                else if (nextState.curTime.getTimeInMillis() < nextState.startTime.getTimeInMillis())
+                else if (nextState.curTime.getTimeInMillis() < nextState.startTime.getTimeInMillis())// Next song is not playing yet
                 {
-                    Log.d("D", "2");
                     //start buffering
                     if (spotifyTimer == null)
                         spotifyDelayedPlay(nextState.startTime);
                 }
-                else
+                else// Next song is already playing
                 {
-                    Log.d("D", "3");
                     if (curSong == null && spotifyTimer == null)
                         spotifyImmediatePlay();
                 }
             }
-            else if (curSong != null)
+            else if (curSong != null)// Next song is not set but we're playing something. We should probably stop.
             {
-                Log.d("D", "4");
                 isMaster = false;
                 curSong = null;
                 bDashboard.setEnabled(true);
                 Global.player.pause(mOperationCallback);
                 trackingStop();
-                Log.d("D", "p3");
             }
         }
         catch (Exception e)
@@ -433,17 +440,20 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
 
 
 
-    ArrayList<Location> locations = new ArrayList<>();
-    ArrayList<Integer> songs = new ArrayList<>();
-    long time = 0;
-    Calendar lastCallback = null;
+    // User metrics
+    ArrayList<Location> locations = new ArrayList<>();// Array of user GPS coordinates during the workout
+    ArrayList<Integer> songs = new ArrayList<>();// Array of songs user has listened to
+    long time = 0;// How long user has been working out for
+    Calendar lastCallback = null;// When was the last tracking update
 
+    // Starts user tracking by starting BackgroundService
     private void trackingStart()
     {
         lastCallback = Calendar.getInstance();
         Global.bgService.Start();
     }
 
+    // Stops user tracking by stopping BackgroundService. Processes tracking data and submits it if it is valid
     private void trackingStop()
     {
         Global.bgService.Stop();
@@ -474,6 +484,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         trackingReset();
     }
 
+    // Resets tracking
     private void trackingReset()
     {
         time = 0;
@@ -482,6 +493,7 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         songs.clear();
     }
 
+    // Tracking callback for BackgroundService. Stores obtained position
     private void locationCallback(Location l)
     {
         if (curSong == null)
@@ -495,12 +507,14 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
 
 
 
+    // Not used
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int index, long l)
     {
 
     }
 
+    // Not used
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
