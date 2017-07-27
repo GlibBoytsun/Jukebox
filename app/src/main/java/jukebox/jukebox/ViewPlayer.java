@@ -336,6 +336,15 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
                     spotifyTimer = null;
                     Global.player.resume(mOperationCallback);
                     trackingStart();
+                    new Handler(Looper.getMainLooper()).post(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            bAddSongs.setEnabled(false);
+                            bDashboard.setEnabled(false);
+                        }
+                    });
                 }
             }, diff);
         }
@@ -351,6 +360,15 @@ public class ViewPlayer extends AppCompatActivity implements AdapterView.OnItemC
         Global.player.playUri(mOperationCallback, Global.group.GetSongByIndex(nextState.songIndex).url, 0, diff);
         curSong = Global.group.GetSongByIndex(nextState.songIndex);
         trackingStart();
+        new Handler(Looper.getMainLooper()).post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                bAddSongs.setEnabled(false);
+                bDashboard.setEnabled(false);
+            }
+        });
     }
 
     // Queries database for player state

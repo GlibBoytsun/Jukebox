@@ -263,7 +263,7 @@ public class Database
                     int ind = 0;
                     try
                     {
-                        ind = new JSONArray(s).getJSONObject(0).getInt("ind");
+                        ind = new JSONArray(s).getJSONObject(0).getInt("ind") + 1;
                     }
                     catch(Exception e)
                     {
